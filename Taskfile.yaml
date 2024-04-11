@@ -1,0 +1,12 @@
+version: 3
+env:
+  KAFKA_SERVICE: kafka1
+  KAKFKA_CONFIG_PATH: ./config/kafka/docker-compose.yaml
+tasks:
+  kafka-up: docker compose -f $KAKFKA_CONFIG_PATH up -d
+  kafka-down: docker compose -f  $KAKFKA_CONFIG_PATH down
+
+  kafka-create-topic: docker compose -f  $KAKFKA_CONFIG_PATH exec $KAFKA_SERVICE kafka-topics --bootstrap-server :9092 --create --replication-factor 1 --partitions 1 --topic  {{.CLI_ARGS}}
+
+  api-run: go run ./cmd/api/main.go
+  logger-run: go run ./cmd/logger/main.go
