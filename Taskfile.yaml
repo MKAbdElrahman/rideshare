@@ -1,12 +1,51 @@
 version: 3
 env:
   KAFKA_SERVICE: kafka1
-  KAKFKA_CONFIG_PATH: ./config/kafka/docker-compose.yaml
+  KAFKA_BROKER_ADDR: localhost:9092
+  KAFKA_CONFIG_PATH: ./config/kafka/docker-compose.yaml
 tasks:
-  kafka-up: docker compose -f $KAKFKA_CONFIG_PATH up -d
-  kafka-down: docker compose -f  $KAKFKA_CONFIG_PATH down
+  install-go-protobuf-plugin: go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+  kafka-ui: google-chrome  http://localhost:8084
+  kafdrop: google-chrome  http://localhost:9000
+  kafka-up: docker compose -f $KAFKA_CONFIG_PATH up -d
+  kafka-down: docker compose -f  $KAFKA_CONFIG_PATH down
+  kafka-list-topics:
+    desc:
+    cmds:
+      - |
+        docker compose -f  $KAFKA_CONFIG_PATH exec $KAFKA_SERVICE \
+        kafka-topics --bootstrap-server $KAFKA_BROKER_ADDR --list --exclude-internal
+  kafka-create-topic:
+    desc: task kafka-create-topic --  hello
+    cmds:
+      - |
+        docker compose -f  $KAFKA_CONFIG_PATH exec $KAFKA_SERVICE \
+        kafka-topics --bootstrap-server $KAFKA_BROKER_ADDR --create --replication-factor 1 --partitions 1 --topic  {{.CLI_ARGS}}
+  kafka-describe-topic:
+    desc:
+    cmds:
+      - |
+        docker compose -f  $KAFKA_CONFIG_PATH exec $KAFKA_SERVICE \
+        kafka-topics --bootstrap-server $KAFKA_BROKER_ADDR --describe --topic  {{.CLI_ARGS}}
 
-  kafka-create-topic: docker compose -f  $KAKFKA_CONFIG_PATH exec $KAFKA_SERVICE kafka-topics --bootstrap-server :9092 --create --replication-factor 1 --partitions 1 --topic  {{.CLI_ARGS}}
+  kafka-delete-topic:
+    desc:
+    cmds:
+      - |
+        docker compose -f  $KAFKA_CONFIG_PATH exec $KAFKA_SERVICE \
+        kafka-topics --bootstrap-server $KAFKA_BROKER_ADDR --delete --topic  {{.CLI_ARGS}}
 
+  kafka-produce-message:
+    desc: task kafka-produce-message --  --topic getting-started
+    cmds:
+      - |
+        docker compose  -f  $KAFKA_CONFIG_PATH exec -it $KAFKA_SERVICE  \
+        kafka-console-producer --broker-list $KAFKA_BROKER_ADDR  --property "parse.key=true" --property "key.separator=:" {{.CLI_ARGS}}
+  kafka-consume-message:
+    desc:
+    cmds:
+      - |
+        docker compose  -f  $KAFKA_CONFIG_PATH exec -it $KAFKA_SERVICE  \
+        kafka-console-consumer --bootstrap-server $KAFKA_BROKER_ADDR  --group cli-consumer --from-beginning --property "print.key=true" --property "key.separator=:" {{.CLI_ARGS}}
   api-run: go run ./cmd/api/main.go
   logger-run: go run ./cmd/logger/main.go
