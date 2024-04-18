@@ -47,5 +47,5 @@ tasks:
       - |
         docker compose  -f  $KAFKA_CONFIG_PATH exec -it $KAFKA_SERVICE  \
         kafka-console-consumer --bootstrap-server $KAFKA_BROKER_ADDR  --group cli-consumer --from-beginning --property "print.key=true" --property "key.separator=:" {{.CLI_ARGS}}
-  api-run: go run ./cmd/api/main.go
+  api-run: "wgo -file=.go -file=.yaml -file=.templ -xfile=_templ.go  go run ./cmd/api/main.go"
   logger-run: go run ./cmd/logger/main.go

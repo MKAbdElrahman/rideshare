@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"rideshare/foundation/pubsub"
+	"time"
 )
 
 type service struct {
@@ -41,11 +42,12 @@ func (s *service) CreateRide(request RideRequestParams) (Ride, error) {
 		return Ride{}, err
 	}
 	return Ride{
-		ID:             eventID,
-		UserID:         request.UserID,
-		PickupLocation: request.PickupLocation,
-		Destination:    request.Destination,
-		Status:         "RideRequestCreated",
+		ID:              eventID,
+		UserID:          request.UserID,
+		PickupLocation:  request.PickupLocation,
+		DropoffLocation: request.DropoffLocation,
+		Status:          "RideRequestCreated",
+		CreatedAt:       time.Now(),
 	}, nil // Replace with actual ride creation logic and return value
 }
 
