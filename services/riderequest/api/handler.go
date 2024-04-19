@@ -78,3 +78,19 @@ func (h *serivceHandler) HandleUpdateRide(w http.ResponseWriter, r *http.Request
 
 func (h *serivceHandler) HandleDeleteRide(w http.ResponseWriter, r *http.Request) {
 }
+
+func (h *serivceHandler) HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
+
+	status := map[string]string{"status": "ok"}
+
+	response, err := json.Marshal(status)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+}

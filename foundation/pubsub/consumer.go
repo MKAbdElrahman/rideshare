@@ -1,9 +1,7 @@
 package pubsub
 
 import (
-	"errors"
 	"fmt"
-	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
@@ -20,7 +18,6 @@ func newKafkaConsumer(brokers string, groupID string) (*kafkaConsumer, error) {
 		"auto.offset.reset": "earliest",
 	}
 
-	// Create a new Kafka consumer with the configuration
 	c, err := kafka.NewConsumer(config)
 	if err != nil {
 		return nil, err
@@ -28,28 +25,36 @@ func newKafkaConsumer(brokers string, groupID string) (*kafkaConsumer, error) {
 	return &kafkaConsumer{groupID: groupID, consumer: c}, nil
 }
 
-func (kc *kafkaConsumer) Consume(topic string) error {
+func (kc *kafkaConsumer) Consume(topic string, errChan chan error) <-chan string {
+	outputChan := make(chan string)
+
 	topicList := []string{topic}
 
 	err := kc.consumer.SubscribeTopics(topicList, nil)
 	if err != nil {
-		return errors.New("failed to subscribe topics: " + err.Error())
+		errChan <- fmt.Errorf("failed to subscribe topics: %v", err)
+		close(outputChan)
+		return outputChan
 	}
+	go kc.consumeMessages(errChan, outputChan)
+
+	return outputChan
+}
+
+func (kc *kafkaConsumer) consumeMessages(errChan chan error, outputChan chan<- string) {
+	defer close(outputChan)
+
 	for {
-		msg, err := kc.consumer.ReadMessage(time.Second)
-		if err == nil {
-			fmt.Printf("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
+		msg, err := kc.consumer.ReadMessage(-1)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to read message: %v", err)
+			continue
 		}
-		if !err.(kafka.Error).IsTimeout() {
-			// The client will automatically try to recover from all errors.
-			// Timeout is not considered an error because it is raised by
-			// ReadMessage in absence of messages.
-			fmt.Printf("Consumer error: %v (%v)\n", err, msg)
-		}
+		outputChan <- fmt.Sprintf("Message on %s: %s", msg.TopicPartition, string(msg.Value))
+
 	}
 }
 
-// Close closes the Kafka consumer
 func (kc *kafkaConsumer) Close() error {
 	return kc.consumer.Close()
 }

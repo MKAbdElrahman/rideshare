@@ -74,3 +74,20 @@ func (h *userHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+
+func (h *userHandler) HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
+
+	status := map[string]string{"status": "ok"}
+
+	response, err := json.Marshal(status)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+}

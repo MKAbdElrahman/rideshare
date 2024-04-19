@@ -1,32 +1,46 @@
 package api
 
 import (
-	"rideshare/services/service/internal/service/internal/db"
+	"fmt"
+	"rideshare/foundation/pubsub"
 )
 
-type thingRepository interface {
-	CreateThing(us db.Thing) error
-	GetThingByID(thingID int) (db.Thing, error)
-}
-
-type publisherI interface {
-	Publish(string) error
-}
-
 type service struct {
-	repo      thingRepository
-	publisher publisherI
+	pubsub *pubsub.PubSub
 }
 
-type ServiceConfig struct {
+type DriverMatchingServiceConfig struct {
+	BrokerURL string
+	GroupID   string
 }
 
-func NewService(cfg ServiceConfig) (*service, error) {
+func NewService(cfg DriverMatchingServiceConfig) (*service, error) {
+	pubSub, err := pubsub.NewPubSub(pubsub.PubSubConfig{
+		Brokers: cfg.BrokerURL,
+		GroupID: cfg.GroupID,
+	})
+	if err != nil {
+		return nil, err
+	}
 
-	return &service{}, nil
+	return &service{pubsub: pubSub}, nil
 }
 
-func (s *service) Action() error {
+func (s *service) StartConsuming() {
+	errChan := make(chan error)
 
-	return nil
+	go func() {
+		for err := range errChan {
+			fmt.Println("Error:", err)
+		}
+	}()
+
+	messages := s.pubsub.Consume("ride-requests", errChan)
+
+	go func() {
+		for msg := range messages {
+			fmt.Println("Message:", msg)
+		}
+	}()
+
 }

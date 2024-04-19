@@ -7,7 +7,7 @@ type PubSub struct {
 
 type PubSubConfig struct {
 	Brokers string
-	groupID string
+	GroupID string
 }
 
 func NewPubSub(cfg PubSubConfig) (*PubSub, error) {
@@ -15,7 +15,7 @@ func NewPubSub(cfg PubSubConfig) (*PubSub, error) {
 	if err != nil {
 		return nil, err
 	}
-	c, err := newKafkaConsumer(cfg.Brokers, cfg.groupID)
+	c, err := newKafkaConsumer(cfg.Brokers, cfg.GroupID)
 	if err != nil {
 		return nil, err
 	}

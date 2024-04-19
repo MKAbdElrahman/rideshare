@@ -1,33 +1,53 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
-	"rideshare/services/service/internal/service/api"
+	"rideshare/services/drivermatching/internal/service/api"
 )
 
-// this interface to constrain what the user handler needs and also works as a contract
 type service interface {
+	StartConsuming()
 }
 
 type serivceHandler struct {
 	service service
 }
 
-type HandlerConfig struct {
-	KafkaBootstrapServer string
-	Topic                string
+type DriverMatchingHandlerConfig struct {
+	BrokerURL string
 }
 
+func NewHandler(cfg DriverMatchingHandlerConfig) (*serivceHandler, error) {
 
-// The service handler creates the concete implmentation as i done't want  the caller to have the responsibility of  injecting the dependancy
-func NewServiceHandler(cfg HandlerConfig) (*serivceHandler, error) {
-
-	s, err := api.NewService(api.ServiceConfig{})
+	service, err := api.NewService(api.DriverMatchingServiceConfig{
+		BrokerURL: cfg.BrokerURL,
+		GroupID:   "rideshare",
+	})
 	if err != nil {
 		return nil, err
 	}
-	return &serivceHandler{service: s}, nil
+	return &serivceHandler{service: service}, nil
 }
 
-func (h *serivceHandler) HandleSomething(w http.ResponseWriter, r *http.Request) {
+func (h *serivceHandler) StartService() {
+
+	h.service.StartConsuming()
+
+}
+
+func (h *serivceHandler) HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
+
+	status := map[string]string{"status": "ok"}
+
+	response, err := json.Marshal(status)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
 }
