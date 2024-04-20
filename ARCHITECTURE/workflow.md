@@ -2,9 +2,7 @@
 
 Here's a breakdown of the ride-hailing service workflow with the driver matching and assignment steps combined:
 
-1. The user initiates a ride request through the mobile application, creating a "ride_requested" event.
-
-2. The User Application publishes the "ride_requested" event.
+1. The ride-requests service initiates a ride request, creating a "ride_requested" event.
 
 3. The Driver Matching Service listens for "ride_requested" events. It identifies a suitable driver based on location and availability, then directly assigns them to the ride request.
 

@@ -9,7 +9,7 @@ type RideRequestParams struct {
 }
 
 type Ride struct {
-	ID              string    `json:"ride_id"`
+	RideID          string    `json:"ride_id"`
 	UserID          string    `json:"user_id"`
 	PickupLocation  Location  `json:"pickup_location"`
 	DropoffLocation Location  `json:"dropoff_location"`
@@ -20,4 +20,12 @@ type Ride struct {
 type Location struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
+}
+
+type RideRequestEvent struct {
+	RideID          string    `json:"ride_id"`
+	UserID          string    `json:"user_id"`
+	PickupLocation  Location  `json:"pickup_location"`
+	DropoffLocation Location  `json:"dropoff_location"`
+	CreatedAt       time.Time `json:"created_at"`
 }

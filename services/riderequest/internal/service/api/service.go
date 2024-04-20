@@ -28,18 +28,26 @@ func NewService(cfg RideRequestServiceConfig) (*service, error) {
 }
 
 func (s *service) CreateRide(request RideRequestParams) (Ride, error) {
-	requestID := uuid.New().String()
 
-	data, err := json.Marshal(request)
+	// save the ride request in the database and return the ride id
+	rideID := uuid.New().String()
+
+	eventData, err := json.Marshal(RideRequestEvent{
+		RideID:          rideID,
+		UserID:          request.UserID,
+		PickupLocation:  request.PickupLocation,
+		DropoffLocation: request.DropoffLocation,
+	})
 	if err != nil {
 		return Ride{}, err
 	}
-	err = s.pubsub.Publish("ride-requests", []byte(requestID), data)
+	
+	err = s.pubsub.Publish("ride-requests", []byte(rideID), eventData)
 	if err != nil {
 		return Ride{}, err
 	}
 	return Ride{
-		ID:              requestID,
+		RideID:          rideID,
 		UserID:          request.UserID,
 		PickupLocation:  request.PickupLocation,
 		DropoffLocation: request.DropoffLocation,
