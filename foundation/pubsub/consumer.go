@@ -6,6 +6,26 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
+type Message struct {
+	Data      []byte
+	Key       []byte
+	Partition int32
+	Offset    int64
+}
+
+func ConvertKafkaMessageToMessage(kafkaMsg kafka.Message) Message {
+	return Message{
+		Data:      kafkaMsg.Value,
+		Key:       kafkaMsg.Key,
+		Partition: kafkaMsg.TopicPartition.Partition,
+		Offset:    int64(kafkaMsg.TopicPartition.Offset),
+	}
+}
+
+func (m Message) String() string {
+	return fmt.Sprintf("Data: %s, Key: %s, Partition: %d, Offset: %d", m.Data, m.Key, m.Partition, m.Offset)
+}
+
 type kafkaConsumer struct {
 	groupID  string
 	consumer *kafka.Consumer
@@ -25,8 +45,8 @@ func newKafkaConsumer(brokers string, groupID string) (*kafkaConsumer, error) {
 	return &kafkaConsumer{groupID: groupID, consumer: c}, nil
 }
 
-func (kc *kafkaConsumer) Consume(topic string, errChan chan error) <-chan string {
-	outputChan := make(chan string)
+func (kc *kafkaConsumer) Consume(topic string, errChan chan error) <-chan Message {
+	outputChan := make(chan Message)
 
 	topicList := []string{topic}
 
@@ -41,7 +61,7 @@ func (kc *kafkaConsumer) Consume(topic string, errChan chan error) <-chan string
 	return outputChan
 }
 
-func (kc *kafkaConsumer) consumeMessages(errChan chan error, outputChan chan<- string) {
+func (kc *kafkaConsumer) consumeMessages(errChan chan error, outputChan chan<- Message) {
 	defer close(outputChan)
 
 	for {
@@ -50,8 +70,7 @@ func (kc *kafkaConsumer) consumeMessages(errChan chan error, outputChan chan<- s
 			errChan <- fmt.Errorf("failed to read message: %v", err)
 			continue
 		}
-		outputChan <- fmt.Sprintf("Message on %s: %s", msg.TopicPartition, string(msg.Value))
-
+		outputChan <- ConvertKafkaMessageToMessage(*msg)
 	}
 }
 

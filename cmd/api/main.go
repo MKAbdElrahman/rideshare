@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	dirverMatchingServiceAPI "rideshare/services/drivermatching/api"
 	rideRequestServiceAPI "rideshare/services/riderequest/api"
@@ -45,6 +47,8 @@ func main() {
 
 	driverMatchingHandler.StartService()
 
-	
-	http.ListenAndServe(":3000", mux)
+	port := 3000
+	addr := fmt.Sprintf(":%d", port)
+	log.Printf("Server started on %s", addr)
+	http.ListenAndServe(addr, mux)
 }

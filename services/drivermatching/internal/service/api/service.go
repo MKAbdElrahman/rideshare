@@ -39,7 +39,7 @@ func (s *service) StartConsuming() {
 
 	go func() {
 		for msg := range messages {
-			fmt.Println("Message:", msg)
+			fmt.Println("Driver-Matching Service", "Msg: ", msg)
 		}
 	}()
 

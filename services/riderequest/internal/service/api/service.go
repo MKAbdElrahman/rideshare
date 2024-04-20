@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"rideshare/foundation/pubsub"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type service struct {
@@ -26,31 +28,22 @@ func NewService(cfg RideRequestServiceConfig) (*service, error) {
 }
 
 func (s *service) CreateRide(request RideRequestParams) (Ride, error) {
-	eventID := generateUniqueID()
+	requestID := uuid.New().String()
 
-	event := RideRequestEvent{
-		ID:      eventID,
-		Request: request,
-	}
-
-	data, err := json.Marshal(event)
+	data, err := json.Marshal(request)
 	if err != nil {
 		return Ride{}, err
 	}
-	err = s.pubsub.Publish("ride-requests", data)
+	err = s.pubsub.Publish("ride-requests", []byte(requestID), data)
 	if err != nil {
 		return Ride{}, err
 	}
 	return Ride{
-		ID:              eventID,
+		ID:              requestID,
 		UserID:          request.UserID,
 		PickupLocation:  request.PickupLocation,
 		DropoffLocation: request.DropoffLocation,
 		Status:          "RideRequestCreated",
 		CreatedAt:       time.Now(),
-	}, nil // Replace with actual ride creation logic and return value
-}
-
-func generateUniqueID() string {
-	return "placeholder_id"
+	}, nil
 }

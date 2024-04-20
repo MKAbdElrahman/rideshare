@@ -20,12 +20,13 @@ func newKafkaProducer(brokers string) (*kafkaProducer, error) {
 	return &kafkaProducer{producer: p}, nil
 }
 
-func (kp *kafkaProducer) Publish(topic string, message []byte) error {
+func (kp *kafkaProducer) Publish(topic string, key, value []byte) error {
 	deliveryChan := make(chan kafka.Event)
 
 	msg := &kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-		Value:          message,
+		Key:            key,
+		Value:          value,
 	}
 
 	err := kp.producer.Produce(msg, deliveryChan)
