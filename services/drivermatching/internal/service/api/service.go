@@ -51,7 +51,7 @@ func (s *service) StartConsuming() {
 			}
 
 			// Match the driver (replace with your matching logic)
-			driverID := matchDriver(rideRequest.PickupLocation)
+			driverID := matchDriver(rideRequest.PickupLocation, rideRequest.DropoffLocation)
 
 			// Prepare the driver assigned event
 			driverAssignedEvent := DriverAssignedEvent{
@@ -76,10 +76,6 @@ func (s *service) StartConsuming() {
 
 }
 
-func matchDriver(location Location) string {
+func matchDriver(pickup_location Location, destination Location) string {
 	return "driver123"
-}
-
-func publishDriverAssignedEvent(event DriverAssignedEvent) {
-	fmt.Printf("Published driver assigned event: %+v\n", event)
 }
